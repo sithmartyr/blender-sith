@@ -141,15 +141,13 @@ def _make_mesh(mesh3do: Mesh3do, uvAbsolute: bool, vertexColors: bool, mat_list:
 
     # Construct mesh
     mesh.from_pydata(mesh3do.vertices, [], faces)
-    mesh.show_double_sided = True
 
     bm = bmesh.new()
     bm.from_mesh(mesh)
     bm.faces.ensure_lookup_table()
 
     vert_color = bm.loops.layers.color.verify()
-    uv_layer   = bm.loops.layers.uv.verify()
-    bm.faces.layers.tex.verify()
+    uv_layer = bm.loops.layers.uv.verify()
     bmMeshInit3doLayers(bm)
 
     # Set mesh materials and UV map
@@ -176,39 +174,31 @@ def _make_mesh(mesh3do: Mesh3do, uvAbsolute: bool, vertexColors: bool, mat_list:
                 mat = makeNewGlobalMaterial(mat_name)
 
         if mat:
+            mat.use_backface_culling = False  # Disable backface culling for double-sided effect
             if mat.name not in mesh.materials:
                 mesh.materials.append(mat)
             face.material_index = mesh.materials.find(mat.name)
 
-        # Set face texture
-        img = None
-        if mat and mat.node_tree.nodes:
-            for node in mat.node_tree.nodes:
-                if node.type == 'TEX_IMAGE':
-                    img = node.image
-                    break
-            if img:
-                tex_layer = bm.faces.layers.tex[uv_layer.name]
-                face[tex_layer].image = img
-
         # Set vertices color and face uv map
-        for idx, loop in enumerate(face.loops): # update vertices
-            vidx             = loop.vert.index
+        for idx, loop in enumerate(face.loops):  # update vertices
+            vidx = loop.vert.index
             loop.vert.normal = mesh3do.normals[vidx]
             if vertexColors:
                 loop[vert_color] = mesh3do.vertexColors[vidx]
 
             # Set UV coordinates
-            luv    = loop[uv_layer]
-            uvIdx  = face3do.uvIdxs[idx]
+            luv = loop[uv_layer]
+            uvIdx = face3do.uvIdxs[idx]
             if uvIdx < len(mesh3do.uvs):
                 uv = mesh3do.uvs[uvIdx]
-                if uvAbsolute: # Remove image size from uv
-                    if img is not None:
-                        uv = vectorDivide(mathutils.Vector(uv), mathutils.Vector(img.size))
-                    elif face3do.materialIdx > -1:
-                        print(f"\nWarning: Could not remove image size from UV coord due to missing image! mesh:'{mesh3do.name}' face:{face.index} uvIdx:{uvIdx}")
-                luv.uv = (uv.x, -uv.y) # Note: Flipped v
+                if uvAbsolute:  # Remove image size from uv
+                    if mat and mat.node_tree.nodes:
+                        img = next((node.image for node in mat.node_tree.nodes if node.type == 'TEX_IMAGE'), None)
+                        if img is not None:
+                            uv = vectorDivide(mathutils.Vector(uv), mathutils.Vector(img.size))
+                        elif face3do.materialIdx > -1:
+                            print(f"\nWarning: Could not remove image size from UV coord due to missing image! mesh:'{mesh3do.name}' face:{face.index} uvIdx:{uvIdx}")
+                luv.uv = (uv.x, -uv.y)  # Note: Flipped v
             elif uvIdx > -1:
                 print(f"Warning: UV index out of range {uvIdx} >= {len(mesh3do.uvs)}! mesh:'{mesh3do.name}' face:{face.index}")
 
@@ -217,6 +207,7 @@ def _make_mesh(mesh3do: Mesh3do, uvAbsolute: bool, vertexColors: bool, mat_list:
 
     mesh.update()
     return mesh
+
 
 def _create_objects_from_model(model: Model3do, uvAbsolute: bool, geosetNum: int, vertexColors: bool, importRadiusObj: bool, preserveOrder: bool):
     collection = bpy.context.collection  # Use the active collection instead of the scene
