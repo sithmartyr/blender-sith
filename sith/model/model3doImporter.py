@@ -117,19 +117,20 @@ def _make_radius_obj(name: str, parent, radius: float):
         ro = bpy.data.objects.new(name , mesh)
         ro.display_type = 'WIRE'
         ro.hide_viewport = True
+        ro.hide_render = True
         ro.parent_type = 'OBJECT'
         ro.parent = parent
-        bpy.context.scene.objects.link(ro)
+        bpy.context.collection.objects.link(ro)
 
     bm = bmesh.new()
-    bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=16, diameter=radius)
+    bmesh.ops.create_uvsphere(bm, u_segments=32, v_segments=16, radius=radius)
     bm.to_mesh(mesh)
     bm.free()
 
 def _set_model_radius(obj: bpy.types.Object, radius: float):
     _make_radius_obj(kModelRadius + obj.name, obj, radius)
 
-def _set_mesh_radius(obj: bpy.types.Object, radius: float):
+def _set_mesh_radius(obj, radius: float):
     _make_radius_obj(kMeshRadius + obj.name, obj, radius)
 
 def _make_mesh(mesh3do: Mesh3do, uvAbsolute: bool, vertexColors: bool, mat_list: List):
@@ -174,10 +175,11 @@ def _make_mesh(mesh3do: Mesh3do, uvAbsolute: bool, vertexColors: bool, mat_list:
                 mat = makeNewGlobalMaterial(mat_name)
 
         if mat:
-            mat.use_backface_culling = False  # Disable backface culling for double-sided effect
             if mat.name not in mesh.materials:
                 mesh.materials.append(mat)
             face.material_index = mesh.materials.find(mat.name)
+            # Set backface culling for the material
+            mat.use_backface_culling = False
 
         # Set vertices color and face uv map
         for idx, loop in enumerate(face.loops):  # update vertices
@@ -193,11 +195,14 @@ def _make_mesh(mesh3do: Mesh3do, uvAbsolute: bool, vertexColors: bool, mat_list:
                 uv = mesh3do.uvs[uvIdx]
                 if uvAbsolute:  # Remove image size from uv
                     if mat and mat.node_tree.nodes:
-                        img = next((node.image for node in mat.node_tree.nodes if node.type == 'TEX_IMAGE'), None)
-                        if img is not None:
-                            uv = vectorDivide(mathutils.Vector(uv), mathutils.Vector(img.size))
-                        elif face3do.materialIdx > -1:
-                            print(f"\nWarning: Could not remove image size from UV coord due to missing image! mesh:'{mesh3do.name}' face:{face.index} uvIdx:{uvIdx}")
+                        for node in mat.node_tree.nodes:
+                            if node.type == 'TEX_IMAGE':
+                                img = node.image
+                                if img is not None:
+                                    uv = vectorDivide(mathutils.Vector(uv), mathutils.Vector(img.size))
+                                break
+                    elif face3do.materialIdx > -1:
+                        print(f"\nWarning: Could not remove image size from UV coord due to missing image! mesh:'{mesh3do.name}' face:{face.index} uvIdx:{uvIdx}")
                 luv.uv = (uv.x, -uv.y)  # Note: Flipped v
             elif uvIdx > -1:
                 print(f"Warning: UV index out of range {uvIdx} >= {len(mesh3do.uvs)}! mesh:'{mesh3do.name}' face:{face.index}")
@@ -209,8 +214,8 @@ def _make_mesh(mesh3do: Mesh3do, uvAbsolute: bool, vertexColors: bool, mat_list:
     return mesh
 
 
+
 def _create_objects_from_model(model: Model3do, uvAbsolute: bool, geosetNum: int, vertexColors: bool, importRadiusObj: bool, preserveOrder: bool):
-    collection = bpy.context.collection  # Use the active collection instead of the scene
     meshes = model.geosets[geosetNum].meshes
     for node in model.meshHierarchy:
         meshIdx = node.meshIdx
@@ -228,40 +233,38 @@ def _create_objects_from_model(model: Model3do, uvAbsolute: bool, geosetNum: int
             if importRadiusObj:
                 _set_mesh_radius(obj, mesh3do.radius)
 
-            obj.display_type = getDrawType(mesh3do.geometryMode)
+            obj.display_type = 'SOLID'
             obj.sith_model3do_light_mode = mesh3do.lightMode.name
             obj.sith_model3do_texture_mode = mesh3do.textureMode.name
-            obj.show_bounds = True
-            collection.objects.link(obj)
+            obj.display_bounds_type = 'SPHERE'
+            bpy.context.collection.objects.link(obj)  # Use the collection method to link the object
         else:
             obj = bpy.data.objects.new(node.name, None)
-            obj.empty_display_size = 0.0
-            collection.objects.link(obj)
+            obj.empty_display_size = (0.0)
+            bpy.context.collection.objects.link(obj)  # Use the collection method to link the object
 
         # Make obj name prefixed by idx num.
         # This will make the hierarchy of model 3do ordered by index instead by name in Blender.
         obj.name = makeOrderedName(obj.name, node.idx, len(model.meshHierarchy)) if preserveOrder else obj.name
 
-        # Set hierarchy node flags, type and name
+        # Set hierarchy node flags, type, and name
         obj.sith_model3do_hnode_idx = node.idx
         obj.sith_model3do_hnode_name = node.name
         obj.sith_model3do_hnode_flags = node.flags.hex()
         obj.sith_model3do_hnode_type = node.type.hex()
 
-        # Set node position, rotation and pivot
+        # Set node position, rotation, and pivot
         _set_obj_pivot(obj, node.pivot)
         obj.location = node.position
         _set_obj_rotation(obj, node.rotation)
 
         node.obj = obj
 
-    # Update the scene
-    bpy.context.view_layer.update()
+    bpy.context.view_layer.update()  # Use view_layer.update() instead of scene.update()
 
     # Set parent hierarchy
     for node in model.meshHierarchy:
         if node.parentIdx != -1:
             node.obj.parent_type = 'OBJECT'
             node.obj.parent = model.meshHierarchy[node.parentIdx].obj
-
-    bpy.context.view_layer.update()
+    bpy.context.view_layer.update()  # Use view_layer.update() instead of scene.update()

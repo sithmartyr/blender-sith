@@ -133,13 +133,14 @@ def getGlobalMaterial(name: str) -> Optional[bpy.types.Material]:
         if mat.name.lower() == name:
             return mat
 
-def makeNewGlobalMaterial(name: str) -> bpy.types.Material:
-    mat = bpy.data.materials.new(name)
+def makeNewGlobalMaterial(mat_name: str) -> bpy.types.Material:
+    mat = bpy.data.materials.new(name=mat_name)
     mat.use_nodes = True
-    mat.texture_slots.add()
-    ts = mat.texture_slots[0]
-    ts.texture_coords = 'UV'
-    ts.uv_layer       = 'UVMap'
+    bsdf = mat.node_tree.nodes["Principled BSDF"]
+    tex_image = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    tex_image.image = bpy.data.images.new(name=mat_name, width=1024, height=1024)  # Placeholder image, adjust as necessary
+    mat.node_tree.links.new(bsdf.inputs['Base Color'], tex_image.outputs['Color'])
+    mat.use_backface_culling = False  # Ensure double-sided rendering
     return mat
 
 def clearSceneAnimData(scene):
