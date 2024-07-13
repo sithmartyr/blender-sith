@@ -218,45 +218,59 @@ def _make_mesh(mesh3do: Mesh3do, uvAbsolute: bool, vertexColors: bool, mat_list:
     mesh.update()
     return mesh
 
-def _create_objects_from_model(model, uvAbsolute, geosetNum, vertexColors, importRadiusObj, preserveOrder):
-    # Ensure the objects are linked to the correct collection
-    collection = bpy.context.collection
+def _create_objects_from_model(model: Model3do, uvAbsolute: bool, geosetNum: int, vertexColors: bool, importRadiusObj: bool, preserveOrder: bool):
+    collection = bpy.context.collection  # Use the active collection instead of the scene
+    meshes = model.geosets[geosetNum].meshes
+    for node in model.meshHierarchy:
+        meshIdx = node.meshIdx
 
-    for geoset in model.geosets:
-        for mesh in geoset.meshes:
-            meshName = mesh.name if not preserveOrder else f"{kNameOrderPrefix}{mesh.idx:02}_{mesh.name}"
-            obj = bpy.data.objects.new(meshName, bpy.data.meshes.new(meshName))
+        # Get node's mesh
+        if meshIdx > -1:
+            if meshIdx >= len(meshes):
+                raise IndexError(f"Mesh index {meshIdx} out of range ({len(meshes)})!")
+
+            mesh3do = meshes[meshIdx]
+            mesh = _make_mesh(mesh3do, uvAbsolute, vertexColors, model.materials)
+            obj = bpy.data.objects.new(mesh3do.name, mesh)
+
+            # Set mesh radius object, draw type, custom property for lighting and texture mode
+            if importRadiusObj:
+                _set_mesh_radius(obj, mesh3do.radius)
+
+            obj.display_type = getDrawType(mesh3do.geometryMode)
+            obj.sith_model3do_light_mode = mesh3do.lightMode.name
+            obj.sith_model3do_texture_mode = mesh3do.textureMode.name
+            obj.show_bounds = True
+            collection.objects.link(obj)
+        else:
+            obj = bpy.data.objects.new(node.name, None)
+            obj.empty_display_size = 0.0
             collection.objects.link(obj)
 
-            bm = bmesh.new()
-            for v in mesh.vertices:
-                bm.verts.new(v)
-            bm.verts.ensure_lookup_table()
+        # Make obj name prefixed by idx num.
+        # This will make the hierarchy of model 3do ordered by index instead by name in Blender.
+        obj.name = makeOrderedName(obj.name, node.idx, len(model.meshHierarchy)) if preserveOrder else obj.name
 
-            bmMeshInit3doLayers(bm)
-            
-            for f in mesh.faces:
-                face = bm.faces.new([bm.verts[i] for i in f.vertexIdxs])
-                face.material_index = f.materialIdx
-                bmFaceSetType(face, bm, f.type)
-                bmFaceSetGeometryMode(face, bm, f.geometryMode)
-                bmFaceSetLightMode(face, bm, f.lightMode)
-                bmFaceSetTextureMode(face, bm, f.textureMode)
-                bmFaceSetExtraLight(face, bm, f.color)
+        # Set hierarchy node flags, type and name
+        obj.sith_model3do_hnode_idx = node.idx
+        obj.sith_model3do_hnode_name = node.name
+        obj.sith_model3do_hnode_flags = node.flags.hex()
+        obj.sith_model3do_hnode_type = node.type.hex()
 
-            bm.to_mesh(obj.data)
-            bm.free()
+        # Set node position, rotation and pivot
+        _set_obj_pivot(obj, node.pivot)
+        obj.location = node.position
+        _set_obj_rotation(obj, node.rotation)
 
-            obj.data.update()
-            mesh.obj = obj
+        node.obj = obj
 
-            # Set custom properties for object
-            obj.sith_model3do_light_mode = mesh.lightMode.name
-            obj.sith_model3do_texture_mode = mesh.textureMode.name
-            obj.sith_model3do_hnode_idx = mesh.idx
-            obj.sith_model3do_hnode_name = mesh.name
-            obj.sith_model3do_hnode_flags = hex(mesh.flags)
-            obj.sith_model3do_hnode_type = hex(mesh.type)
+    # Update the scene
+    bpy.context.view_layer.update()
 
-            if importRadiusObj:
-                _set_mesh_radius(obj, mesh.radius)
+    # Set parent hierarchy
+    for node in model.meshHierarchy:
+        if node.parentIdx != -1:
+            node.obj.parent_type = 'OBJECT'
+            node.obj.parent = model.meshHierarchy[node.parentIdx].obj
+
+    bpy.context.view_layer.update()
