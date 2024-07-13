@@ -50,6 +50,9 @@ kNameOrderPrefix   = "no"
 def bmFaceSeqGetLayerString(faces: bmesh.types.BMFaceSeq, name: str, makeLayer: bool = True) -> Optional[bmesh.types.BMLayerItem]:
     return faces.layers.string.get(name) or (faces.layers.string.new(name) if makeLayer else None)
 
+def bmFaceSeqGetLayerInt(faces: bmesh.types.BMFaceSeq, name: str, makeLayer: bool = True) -> Optional[bmesh.types.BMLayerItem]:
+    return faces.layers.int.get(name) or (faces.layers.int.new(name) if makeLayer else None)
+
 def __bmface_get_int_property(face: bmesh.types.BMFace, tag: bmesh.types.BMLayerItem, default: int) -> int:
     if tag:
         v = face[tag]

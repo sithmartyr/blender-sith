@@ -233,6 +233,8 @@ def _create_objects_from_model(model, uvAbsolute, geosetNum, vertexColors, impor
                 bm.verts.new(v)
             bm.verts.ensure_lookup_table()
 
+            bmMeshInit3doLayers(bm)
+            
             for f in mesh.faces:
                 face = bm.faces.new([bm.verts[i] for i in f.vertexIdxs])
                 face.material_index = f.materialIdx
