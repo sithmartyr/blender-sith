@@ -82,9 +82,9 @@ def _is_aux_obj(obj: bpy.types.Object) -> bool:
     return (kModelRadius in obj.name) or (kMeshRadius in obj.name)
 
 def _uv_add_image_size(uv: mathutils.Vector, mat) -> mathutils.Vector:
-    for s in mat.texture_slots:
-        if s and s.texture_coords == 'UV' and s.texture and s.texture.type == 'IMAGE':
-            return vectorMultiply(uv, mathutils.Vector(s.texture.image.size))
+    for node in mat.node_tree.nodes:
+        if node.type == 'TEX_IMAGE':
+            return vectorMultiply(uv, mathutils.Vector(node.image.size))
     return uv
 
 def _find_vertex(vlist: List[Vector3f], v: Vector3f, vcolors: List[Vector4f], vcolor: Vector4f) -> int:
@@ -162,7 +162,7 @@ def _model3do_add_mesh(model: Model3do, mesh: bpy.types.Mesh, scale: mathutils.V
             # Set UV coordinates
             uv = loop[uv_layer].uv
             if uvAbsolute and mat is not None:
-                if len(mat.texture_slots) == 0:
+                if len(mat.node_tree.nodes) == 0:
                     print(f"\nWarning: Using absolute UV coords for mesh:'{mesh3do.name}' face:{len(mesh3do.faces)} due to face hasn't any texture set!")
                     face3do.materialIdx = -1
                 else:

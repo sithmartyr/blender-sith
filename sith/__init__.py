@@ -24,14 +24,12 @@ bl_info = {
     "description": "Import/export 3D model(s), animation(s) and texture(s) for the games based on Sith game engine",
     "author": "Crt Vavros",
     "version": (1, 0, 0),
-    "pre_release": "rc4",
-    "warning": "Pre-release RC4",
-    "blender": (2, 79, 0),
+    "blender": (4, 1, 1),
     "location": "File > Import-Export",
     "wiki_url": "https://github.com/smlu/blender-sith",
     "tracker_url": "https://github.com/smlu/blender-sith/issues",
     "support": "COMMUNITY",
-    "category": "Import-Export"
+    "category": "Object"
 }
 
 # Reload imported submodules if script is reloaded
@@ -53,8 +51,9 @@ if "bpy" in locals():
         importlib.reload(utils)
 
 import bpy, bmesh, os.path, re
-from bpy_extras.io_utils import ImportHelper
-from bpy_extras.io_utils import ExportHelper
+from bpy_extras.io_utils import ImportHelper, ExportHelper
+from bpy.props import StringProperty, BoolProperty
+from bpy.types import Operator
 from pathlib import Path
 
 from sith.key import (
@@ -146,7 +145,7 @@ def _get_model3do_texture_mode_list():
 def _get_export_obj(context, report, data_type: str):
     """ Returns obj by searching for top object which represents 3DO model """
     eobj = None
-    if kGModel3do not in bpy.data.groups or len(bpy.data.groups[kGModel3do].objects) == 0:
+    if kGModel3do not in bpy.data.collections or len(bpy.data.collections[kGModel3do].objects) == 0:
         # Get one selected object
         if context.active_object is None:
             print(f"Error: Could not determine which object to export {data_type} data from. Select 1 object or put object into '{kGModel3do}' group!")
@@ -155,7 +154,7 @@ def _get_export_obj(context, report, data_type: str):
         eobj = context.active_object
 
     else: # Model3do group
-        objs = bpy.data.groups[kGModel3do].objects
+        objs = bpy.data.collections[kGModel3do].objects
         if len(objs) == 0:
             print(f"Error: No object in '{kGModel3do}' group. Add object to the group or delete the group!")
             report({'ERROR'}, f"Group '{kGModel3do}' is empty! Add object to the group or delete the group!")
@@ -696,8 +695,8 @@ def register():
         bpy.utils.register_class(cls)
 
     # Register menu functions
-    bpy.types.INFO_MT_file_export.append(menu_func_export)
-    bpy.types.INFO_MT_file_import.append(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.append(menu_func_import)
 
     # 3DO custom properties for object
     bpy.types.Object.sith_model3do_light_mode = bpy.props.EnumProperty(
@@ -784,8 +783,8 @@ def unregister():
     del bpy.types.Object.sith_model3do_texture_mode
     del bpy.types.Object.sith_model3do_light_mode
 
-    bpy.types.INFO_MT_file_export.remove(menu_func_export)
-    bpy.types.INFO_MT_file_import.remove(menu_func_import)
+    bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
+    bpy.types.TOPBAR_MT_file_import.remove(menu_func_import)
 
     for cls in classes:
         bpy.utils.unregister_class(cls)

@@ -57,33 +57,36 @@ def import3do(file_path: Union[Path, str], mat_dirs: List[Union[Path, str]] = []
             clearAllScenes()
 
         # Load model's textures
-        mat_dirs = _convert_to_absolute_paths(mat_dirs, os.path.dirname(file_path)) # convert relative paths to file_path base folder
+        mat_dirs = [str(mat_dir) for mat_dir in mat_dirs]  # Convert to strings
+        file_path_str = str(file_path)  # Convert file_path to string
+        mat_dirs = _convert_to_absolute_paths(mat_dirs, os.path.dirname(file_path_str))  # convert relative paths to file_path base folder
         with BenchmarkMeter('Info: \nLoaded materials from files in {:.4f} sec.', enabled=False):
-            importMaterials(model.materials, getDefaultMatFolders(file_path) + mat_dirs, cmp)
+            importMaterials(model.materials, getDefaultMatFolders(file_path_str) + mat_dirs, cmp)
 
         # Create objects from model
         _create_objects_from_model(model, uvAbsolute=(isJkdf2 and uvAbsolute_2_1), geosetNum=0, vertexColors=importVertexColors, importRadiusObj=importRadiusObj, preserveOrder=preserveOrder)
 
         # Set model's insert offset and radius
         baseObj = bpy.data.objects.new(model.name, None)
-        baseObj.empty_draw_size = (0.0)
-        bpy.context.scene.objects.link(baseObj)
+        baseObj.empty_display_size = (0.0)
+        bpy.context.scene.collection.objects.link(baseObj)
 
         baseObj.location = model.insert_offset
         if importRadiusObj:
             _set_model_radius(baseObj, model.radius)
 
-        firstChild             = model.meshHierarchy[0].obj
+        firstChild = model.meshHierarchy[0].obj
         firstChild.parent_type = 'OBJECT'
-        firstChild.parent      = baseObj
+        firstChild.parent = baseObj
 
         # Add model to the "Model3do" group
         if kGModel3do in bpy.data.collections:
             group = bpy.data.collections[kGModel3do]
         else:
             group = bpy.data.collections.new(kGModel3do)
-        collection.objects.link(baseObj)
+        group.objects.link(baseObj)
         return baseObj
+
 
 def _convert_to_absolute_paths(path_list: List[Union[Path, str]], cwd: Union[Path, str]) -> List[Union[Path, str]]:
     absolute_paths: List[Union[Path, str]] = []

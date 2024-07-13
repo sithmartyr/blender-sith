@@ -180,7 +180,7 @@ def stripOrderPrefix(name: str) -> str:
 
 def _get_scene_obj(name: str) -> Optional[bpy.types.Object]:
     try:
-        return bpy.context.scene.objects[name]
+        return bpy.context.collection.objects[name]
     except:
         return None
 
@@ -188,9 +188,9 @@ def getModelRadiusObj(obj: bpy.types.Object) -> Optional[bpy.types.Object]:
     return _get_scene_obj(kModelRadius + stripOrderPrefix(obj.name))
 
 def getMeshObjectByName(meshName: str) -> bpy.types.Object:
-    if meshName in bpy.context.scene.objects:
-        return bpy.context.scene.objects[meshName]
-    for o in bpy.context.scene.objects:
+    if meshName in bpy.context.collection.objects:
+        return bpy.context.collection.objects[meshName]
+    for o in bpy.context.collection.objects:
         if meshName == stripOrderPrefix(o.name):
             return o
         if o.data is not None and o.data.name == meshName:
@@ -303,7 +303,7 @@ def getDrawType(geo_mode: GeometryMode) -> str:
     raise ValueError(f"Unknown geometry mode {geo_mode}")
 
 def objGeometryMode(obj: bpy.types.Object) -> GeometryMode:
-    dt: str = obj.draw_type
+    dt: str = obj.display_type
     if dt == 'BOUNDS':
         return GeometryMode.NotDrawn
     elif dt == 'WIRE':

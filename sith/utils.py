@@ -121,7 +121,7 @@ def getFilePathInDir(filename: str, dirPath: Union[Path, str], insensitive: bool
             if file_exists(filePath) and f.lower() == filename:
                 return filePath
 
-def getGlobalMaterial(name: str):
+def getGlobalMaterial(name: str) -> Optional[bpy.types.Material]:
     if name in bpy.data.materials:
         return bpy.data.materials[name]
 
@@ -130,11 +130,12 @@ def getGlobalMaterial(name: str):
         return bpy.data.materials[name]
 
     for mat in bpy.data.materials:
-        if(mat.name.lower() == name):
+        if mat.name.lower() == name:
             return mat
 
-def makeNewGlobalMaterial(name: str):
+def makeNewGlobalMaterial(name: str) -> bpy.types.Material:
     mat = bpy.data.materials.new(name)
+    mat.use_nodes = True
     mat.texture_slots.add()
     ts = mat.texture_slots[0]
     ts.texture_coords = 'UV'
@@ -147,49 +148,32 @@ def clearSceneAnimData(scene):
         ob.animation_data_clear()
 
 def clearAllScenes():
+    # Ensure all objects are unlinked from their collections
     for scene in bpy.data.scenes:
         for obj in scene.objects:
-            if obj.mode != "OBJECT":
-                bpy.ops.object.mode_set(mode='OBJECT')
-            scene.objects.unlink(obj)
+            if obj.name in scene.collection.objects:
+                scene.collection.objects.unlink(obj)
+        for collection in scene.collection.children:
+            for obj in collection.objects:
+                collection.objects.unlink(obj)
+            scene.collection.children.unlink(collection)
+    
+    # Remove all objects
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete(use_global=False)
 
-        for layer in scene.render.layers:
-            try: scene.render.layers.remove(layer)
-            except: pass
+    # Remove all meshes
+    bpy.ops.outliner.orphans_purge(do_local_ids=True, do_linked_ids=True, do_recursive=True)
 
-        # Remove animation data:
-        clearSceneAnimData(scene)
-        # Remove scene
-        try: bpy.data.scenes.remove(scene)
-        except: pass
+    # Remove all materials
+    for material in bpy.data.materials:
+        bpy.data.materials.remove(material)
+    
+    # Remove all collections
+    for collection in bpy.data.collections:
+        bpy.data.collections.remove(collection)
 
-    for bpy_data_iter in (
-        bpy.data.actions,
-        bpy.data.armatures,
-        bpy.data.objects,
-        bpy.data.meshes,
-        bpy.data.lamps,
-        bpy.data.images,
-        bpy.data.curves,
-        bpy.data.materials,
-        bpy.data.cameras,
-        bpy.data.textures,
-        bpy.data.groups,
-        bpy.data.lattices,
-        bpy.data.grease_pencil,
-        bpy.data.libraries,
-        bpy.data.metaballs,
-        bpy.data.movieclips,
-        bpy.data.node_groups,
-        bpy.data.particles,
-        bpy.data.shape_keys,
-        bpy.data.worlds
-    ):
-        for id_data in bpy_data_iter:
-            if hasattr(bpy_data_iter, 'remove'): # Some bpy_prop_collection don't have this method.
-                bpy_data_iter.remove(id_data)
-
-def getExportFileHeader(prefix: str):
+def getExportFileHeader(prefix: str) -> str:
     version: Tuple[int] = bl_info['version']
     verstr = '.'.join([str(v) for v in version])
     if 'pre_release' in bl_info:

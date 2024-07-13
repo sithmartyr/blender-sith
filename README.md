@@ -1,4 +1,4 @@
-# Blender 2.79 addon for the games based on Sith game engine
+# Blender 4.1 addon for the games based on Sith game engine
 [<img src="demo/blsthbn_sm.png"/>](demo/blsthbn.png)
 
 Addon provides Blender game assets import/export scripts for the games based on Sith game engine:
@@ -19,7 +19,7 @@ Addon provides Blender game assets import/export scripts for the games based on 
 <img src="demo/gif/kych.gif" width="50%"/><img src="demo/gif/diswim.gif" width="50%"/>
 
 ## Requirements
-The latest Blender 2.79b, you can download it [here](https://download.blender.org/release/Blender2.79/latest/). 
+The latest Blender 4.1.1, you can download it [here](https://www.blender.org/download/). 
 
 ## Installation
    1. Download `sith.zip` file from the [Releases](https://github.com/smlu/blender-sith/releases) page.
