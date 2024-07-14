@@ -319,7 +319,7 @@ def importMat(filePath: Union[Path, str], cmp: Optional[ColorMap] = None) -> bpy
 
     bsdf = mat.node_tree.nodes.new('ShaderNodeBsdfPrincipled')
     output = mat.node_tree.nodes.new('ShaderNodeOutputMaterial')
-    mat.node_tree.links.new(bsdf.outputs['BSDF'], outputs.inputs['Surface'])
+    mat.node_tree.links.new(bsdf.outputs['BSDF'], output.inputs['Surface'])
 
     mat.use_shadeless    = True
     mat.use_object_color = True

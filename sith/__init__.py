@@ -192,12 +192,12 @@ class ImportMat(bpy.types.Operator, ImportHelper):
     bl_label     = 'Import MAT'
     filename_ext = '.mat'
 
-    filter_glob = bpy.props.StringProperty(
+    filter_glob: StringProperty(
         default = '*.mat',
         options = {'HIDDEN'}
     )
 
-    cmp_file = bpy.props.StringProperty(
+    cmp_file: StringProperty(
         name        = 'ColorMap Directory',
         description = "Path to the ColorMap file (.cmp) used by mat textures of the imported 3DO model (JKDF2 & MOTS only).\n\nBy default file is searched in specified path, in the directory of the imported 3DO model and it's parent directory.\nIf no file is specified 'dflt.cmp' file is loaded",
     )
@@ -220,74 +220,78 @@ class ImportModel3do(bpy.types.Operator, ImportHelper):
     bl_label     = 'Import 3DO'
     filename_ext = '.3do'
 
-    filter_glob = bpy.props.StringProperty(
+    filter_glob: StringProperty(
         default = '*.3do',
         options = {'HIDDEN'}
     )
 
-    set_3d_view = bpy.props.BoolProperty(
+    set_3d_view: BoolProperty(
         name        = 'Adjust 3D View',
         description = 'Adjust 3D View accordingly to the 3DO model position, size etc..',
         default     = True,
     )
 
-    clear_scene = bpy.props.BoolProperty(
+    clear_scene: BoolProperty(
         name        = 'Clear Scene',
         description = 'Remove all scenes and content before importing 3DO model to the scene',
         default     = True,
     )
 
-    uv_absolute_3do_2_1 = bpy.props.BoolProperty(
+    uv_absolute_3do_2_1: BoolProperty(
         name        = '3DO 2.1 - Absolute UV',
         description = 'If imported 3DO file is version 2.1 the absolute UV coordinates will be converted to relative UV coordinates (Required for JKDF2 & MOTS)',
         default     = True,
     )
 
-    vertex_colors = bpy.props.BoolProperty(
+    vertex_colors: BoolProperty(
         name        = 'Import Vertex Colors',
         description = 'Import mesh vertex colors from 3DO',
         default     = False,
     )
 
-    import_radius_objects = bpy.props.BoolProperty(
+    import_radius_objects: BoolProperty(
         name        = 'Import Radius Objects',
         description = 'Import mesh radius as wireframe sphere object',
         default     = False,
     )
 
-    preserve_order = bpy.props.BoolProperty(
+    preserve_order: BoolProperty(
         name        = 'Preserve Mesh Hierarchy',
         description = f"Preserve 3DO mesh hierarchy in Blender.\n\nIf enabled, the order of the imported mesh hierarchy will be preserved by prefixing the name of each mesh object with '{kNameOrderPrefix}<seq_number>_'.",
         default     = False,
     )
 
-    mat_dir = bpy.props.StringProperty(
+    mat_dir: StringProperty(
         name        = 'MAT Directory',
         description = "Path to the directory to search for MAT texture files (.mat) of the imported 3DO model.\n\nBy default, required texture files are searched in the 'mat' directory at the location of the imported 3DO model and its parent directory",
+        subtype='DIR_PATH'
     )
 
-    cmp_file = bpy.props.StringProperty(
+    cmp_file: StringProperty(
         name        = 'ColorMap File',
         description = "Path to the ColorMap file (.cmp) used by mat textures of the imported 3DO model (JKDF2 & MOTS only).\n\nBy default, file is searched in specified path, in the directory of the imported 3DO model and its parent directory.\nIf no file is specified 'dflt.cmp' file is loaded",
+        subtype='FILE_PATH'
     )
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, 'set_3d_view')
-        layout.prop(self, 'clear_scene')
-        layout.prop(self, 'uv_absolute_3do_2_1')
-        layout.prop(self, 'vertex_colors')
-        layout.prop(self, 'import_radius_objects')
-        layout.prop(self, 'preserve_order')
+        sfile = context.space_data
+        operator = sfile.active_operator
 
-        mat_layout = layout.box().column()
-        mat_layout.label(text='Texture(s)')
-        mat_dir_layout = mat_layout.box().column()
-        mat_dir_layout.label(text='MAT Directory')
-        mat_dir_layout.prop(self, 'mat_dir', text='')
-        cmp_file_layout = mat_layout.box().column()
-        cmp_file_layout.label(text='ColorMap File (JKDF2 & MOTS)')
-        cmp_file_layout.prop(self, 'cmp_file', text='')
+        layout.prop(operator, 'set_3d_view')
+        layout.prop(operator, 'clear_scene')
+        layout.prop(operator, 'uv_absolute_3do_2_1')
+        layout.prop(operator, 'vertex_colors')
+        layout.prop(operator, 'import_radius_objects')
+        layout.prop(operator, 'preserve_order')
+
+        tex_layout = layout.row()
+        tex_layout.label(text='Texture(s)')
+        mat_file_layout = tex_layout.row()
+        cmp_file_layout = tex_layout.row()
+        
+        mat_file_layout.prop(operator, 'mat_dir', text='MAT Directory')
+        cmp_file_layout.prop(operator, 'cmp_file', text='ColorMap File (JKDF2 & MOTS')
 
     def execute(self, context):
         obj = import3do(self.filepath, [self.mat_dir], self.cmp_file, self.uv_absolute_3do_2_1, self.vertex_colors, self.import_radius_objects, self.preserve_order, self.clear_scene)
@@ -309,12 +313,14 @@ class ImportModel3do(bpy.types.Operator, ImportHelper):
             context.view_layer.objects.active = obj
             bpy.ops.object.select_grouped(type='CHILDREN_RECURSIVE')
 
-            override = {'area': area, 'region': region, 'edit_object': context.edit_object}
-            bpy.ops.view3d.view_axis(override, type='BACK', align_active=True)
-            bpy.ops.view3d.view_selected(override)
+            override = {'area': area, 'region': region, 'edit_object': context.edit_object, 'active_object': context.active_object}
+
+            with context.temp_override(**override):
+                bpy.ops.view3d.view_axis(type='BACK', align_active=True)
+                bpy.ops.view3d.view_selected()
 
             bpy.ops.object.select_all(action='DESELECT')
-            context.scene.objects.active = active_obj
+            context.view_layer.objects.active = active_obj
             space.lock_object            = None
 
         return {'FINISHED'}
