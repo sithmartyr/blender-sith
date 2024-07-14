@@ -275,23 +275,24 @@ class ImportModel3do(bpy.types.Operator, ImportHelper):
 
     def draw(self, context):
         layout = self.layout
-        sfile = context.space_data
-        operator = sfile.active_operator
 
-        layout.prop(operator, 'set_3d_view')
-        layout.prop(operator, 'clear_scene')
-        layout.prop(operator, 'uv_absolute_3do_2_1')
-        layout.prop(operator, 'vertex_colors')
-        layout.prop(operator, 'import_radius_objects')
-        layout.prop(operator, 'preserve_order')
+        layout.prop(self, 'set_3d_view')
+        layout.prop(self, 'clear_scene')
+        layout.prop(self, 'uv_absolute_3do_2_1')
+        layout.prop(self, 'vertex_colors')
+        layout.prop(self, 'import_radius_objects')
+        layout.prop(self, 'preserve_order')
 
-        tex_layout = layout.row()
-        tex_layout.label(text='Texture(s)')
-        mat_file_layout = tex_layout.row()
-        cmp_file_layout = tex_layout.row()
-        
-        mat_file_layout.prop(operator, 'mat_dir', text='MAT Directory')
-        cmp_file_layout.prop(operator, 'cmp_file', text='ColorMap File (JKDF2 & MOTS')
+        mat_layout = layout.box().column()
+        mat_layout.label(text='Texture(s)')
+
+        mat_dir_layout = mat_layout.box().column()
+        mat_dir_layout.label(text='MAT Directory')
+        mat_dir_layout.prop(self, 'mat_dir', text='')
+
+        cmp_file_layout = mat_layout.box().column()
+        cmp_file_layout.label(text='ColorMap File (JKDF2 & MOTS)')
+        cmp_file_layout.prop(self, 'cmp_file', text='')
 
     def execute(self, context):
         obj = import3do(self.filepath, [self.mat_dir], self.cmp_file, self.uv_absolute_3do_2_1, self.vertex_colors, self.import_radius_objects, self.preserve_order, self.clear_scene)
