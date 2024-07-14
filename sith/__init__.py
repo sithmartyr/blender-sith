@@ -296,24 +296,21 @@ class ImportModel3do(bpy.types.Operator, ImportHelper):
             area   = next(area   for area   in context.screen.areas if area.type == 'VIEW_3D')
             region = next(region for region in area.regions if region.type == 'WINDOW')
             space  = next(space  for space  in area.spaces if space.type == 'VIEW_3D')
-            space.viewport_shade    = 'MATERIAL'
+            space.shading.type    = 'MATERIAL'
             space.lens              = 100.0
             space.clip_start        = 0.001
             space.lock_object       = obj
-            space.show_floor        = True
-            space.show_axis_x       = True
-            space.show_axis_y       = True
-            space.grid_lines        = 10
-            space.grid_scale        = 1.0
-            space.grid_subdivisions = 10
+            space.overlay.show_floor        = True
+            space.overlay.show_axis_x       = True
+            space.overlay.show_axis_y       = True
+            space.overlay.grid_scale        = 1.0
 
-            active_obj = context.scene.objects.active
-            context.scene.objects.active = obj
+            active_obj = context.view_layer.objects.active
+            context.view_layer.objects.active = obj
             bpy.ops.object.select_grouped(type='CHILDREN_RECURSIVE')
 
             override = {'area': area, 'region': region, 'edit_object': context.edit_object}
-            bpy.ops.view3d.view_center_lock(override)
-            bpy.ops.view3d.viewnumpad(override, type='BACK', align_active=True)
+            bpy.ops.view3d.view_axis(override, type='BACK', align_active=True)
             bpy.ops.view3d.view_selected(override)
 
             bpy.ops.object.select_all(action='DESELECT')
