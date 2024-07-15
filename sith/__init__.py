@@ -264,13 +264,11 @@ class ImportModel3do(bpy.types.Operator, ImportHelper):
     mat_dir: StringProperty(
         name        = 'MAT Directory',
         description = "Path to the directory to search for MAT texture files (.mat) of the imported 3DO model.\n\nBy default, required texture files are searched in the 'mat' directory at the location of the imported 3DO model and its parent directory",
-        subtype='DIR_PATH'
     )
 
     cmp_file: StringProperty(
         name        = 'ColorMap File',
         description = "Path to the ColorMap file (.cmp) used by mat textures of the imported 3DO model (JKDF2 & MOTS only).\n\nBy default, file is searched in specified path, in the directory of the imported 3DO model and its parent directory.\nIf no file is specified 'dflt.cmp' file is loaded",
-        subtype='FILE_PATH'
     )
 
     def draw(self, context):

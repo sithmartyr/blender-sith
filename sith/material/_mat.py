@@ -265,9 +265,13 @@ def _mat_add_new_texture(mat: bpy.types.Material, width: int, height: int, idx: 
         img = bpy.data.images.new(tex_name, width=width, height=height)
         img.generated_type = 'BLANK'
         img.generated_color = (1.0, 1.0, 1.0, 0.0) if hasTransparency else (1.0, 1.0, 1.0, 1.0)
-    
+
     if pixel_data:
-        img.pixels = pixel_data
+        # Convert Pixel objects to a flat list of floats
+        flat_pixel_data = []
+        for p in pixel_data:
+            flat_pixel_data.extend([p.red, p.green, p.blue, p.alpha])
+        img.pixels = flat_pixel_data
 
     tex = bpy.data.textures.new(tex_name, type='IMAGE')
     tex.image = img
