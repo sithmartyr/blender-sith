@@ -257,21 +257,32 @@ def _get_tex_name(idx: int, mat_name: str) -> str:
         name += '_cel_' + str(idx)
     return name
 
-def _mat_add_new_texture(mat: bpy.types.Material, width: int, height: int, idx: int, pixel_data: Optional[Pixels], hasTransparency: bool):
-    tex_name = f"{mat.name}_tex_{idx}"
-    if tex_name in bpy.data.images:
-        img = bpy.data.images[tex_name]
+def _mat_add_new_texture(mat: bpy.types.Material, width: int, height: int, texIdx: int, pixdata: Optional[Pixels], hasTransparency: bool):
+    img_name = _get_tex_name(texIdx, mat.name)
+    if not img_name in bpy.data.images:
+        img = bpy.data.images.new(
+            img_name,
+            width  = width,
+            height = height
+        )
     else:
-        img = bpy.data.images.new(tex_name, width=width, height=height)
-        img.generated_type = 'BLANK'
-        img.generated_color = (1.0, 1.0, 1.0, 0.0) if hasTransparency else (1.0, 1.0, 1.0, 1.0)
-    
-    if pixel_data:
-        # Convert Pixel objects to a flat list of floats
-        flat_pixel_data = []
-        for p in pixel_data:
-            flat_pixel_data.extend([p.red, p.green, p.blue, p.alpha])
-        img.pixels = flat_pixel_data
+        img = bpy.data.images[img_name]
+        if img.has_data:
+            img.scale(width, height)
+
+    if pixdata is not None:
+        flat_pixdata = [chan for pixel in pixdata for chan in (pixel.red, pixel.green, pixel.blue, pixel.alpha)]
+        img.pixels = pixdata
+        img.pack(as_png=True)
+        img.update()
+    else:
+        img.generated_type   = 'UV_GRID'
+        img.generated_width  = width
+        img.generated_height = height
+
+    tex                   = bpy.data.textures.new(img_name, 'IMAGE')
+    tex.image             = img
+    tex.use_preview_alpha = hasTransparency
 
     bsdf = mat.node_tree.nodes.get("Principled BSDF")
     if not bsdf:
@@ -280,12 +291,15 @@ def _mat_add_new_texture(mat: bpy.types.Material, width: int, height: int, idx: 
     tex_image_node = mat.node_tree.nodes.new('ShaderNodeTexImage')
     tex_image_node.image = img
 
+    tex_coord_node = mat.node_tree.nodes.new('ShaderNodeTexCoord')
+    mapping_node = mat.node_tree.nodes.new('ShaderNodeMapping')
+
+    mat.node_tree.links.new(tex_coord_node.outputs['UV'], mapping_node.inputs['Vector'])
+    mat.node_tree.links.new(mapping_node.outputs['Vector'], tex_image_node.inputs['Vector'])
+    mat.node_tree.links.new(tex_image_node.outputs['Color'], bsdf.inputs['Base Color'])
+
     if hasTransparency:
         mat.blend_method = 'BLEND'
-
-    # Connect the texture node to the BSDF node
-    mat.node_tree.links.new(tex_image_node.outputs['Color'], bsdf.inputs['Base Color'])
-    if hasTransparency:
         mat.node_tree.links.new(tex_image_node.outputs['Alpha'], bsdf.inputs['Alpha'])
 
 def _max_cels(len: int) -> int:
