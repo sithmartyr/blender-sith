@@ -271,9 +271,14 @@ def _mat_add_new_texture(mat: bpy.types.Material, width: int, height: int, texId
             img.scale(width, height)
 
     if pixdata is not None:
-        flat_pixdata = [chan for pixel in pixdata for chan in (pixel.red, pixel.green, pixel.blue, pixel.alpha)]
-        img.pixels = flat_pixdata
-        #img.pack(as_png=True)
+        flipped_pixdata = []
+        for y in range(height):
+            for x in range(width):
+                index = (height - y - 1) * width + x
+                pixel = pixdata[index]
+                flipped_pixdata.extend([pixel.red, pixel.green, pixel.blue, pixel.alpha])
+
+        img.pixels = flipped_pixdata
         img.update()
     else:
         img.generated_type   = 'UV_GRID'
@@ -293,9 +298,6 @@ def _mat_add_new_texture(mat: bpy.types.Material, width: int, height: int, texId
 
     tex_coord_node = mat.node_tree.nodes.new('ShaderNodeTexCoord')
     mapping_node = mat.node_tree.nodes.new('ShaderNodeMapping')
-
-    mapping_node.vector_type = 'TEXTURE'
-    mapping_node.inputs['Scale'].default_value[1] = -1 # Flippity flip (sad hack??)
 
     mat.node_tree.links.new(tex_coord_node.outputs['UV'], mapping_node.inputs['Vector'])
     mat.node_tree.links.new(mapping_node.outputs['Vector'], tex_image_node.inputs['Vector'])
