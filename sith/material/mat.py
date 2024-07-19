@@ -304,8 +304,10 @@ def _mat_add_new_texture(mat: bpy.types.Material, width: int, height: int, texId
     mat.node_tree.links.new(tex_image_node.outputs['Color'], bsdf.inputs['Base Color'])
 
     if hasTransparency:
-        mat.blend_method = 'BLEND'
+        mat.blend_method = 'OPAQUE'
         mat.node_tree.links.new(tex_image_node.outputs['Alpha'], bsdf.inputs['Alpha'])
+    else:
+        mat.blend_method = 'OPAQUE'
 
 def _max_cels(len: int) -> int:
     return min(len, max_texture_slots)
