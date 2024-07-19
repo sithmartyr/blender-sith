@@ -330,12 +330,12 @@ class ExportModel3do(bpy.types.Operator, ExportHelper):
     bl_label     = 'Export 3DO'
     filename_ext = '.3do'
 
-    filter_glob = bpy.props.StringProperty(
+    filter_glob: bpy.props.StringProperty(
         default = '*.3do',
         options = {'HIDDEN'}
     )
 
-    version = bpy.props.EnumProperty(
+    version: bpy.props.EnumProperty(
         name        = 'Version',
         description = '3DO file version',
         items       = [
@@ -343,22 +343,22 @@ class ExportModel3do(bpy.types.Operator, ExportHelper):
             (Model3doFileVersion.Version2_2.name, '2.2 - IJIM (RGB)'  , 'Indiana Jones and the Infernal Machine - RGB color' ),
             (Model3doFileVersion.Version2_3.name, '2.3 - IJIM'        , 'Indiana Jones and the Infernal Machine - RGBA color')
         ],
-        default= Model3doFileVersion.Version2_3.name
+        default = Model3doFileVersion.Version2_3.name
     )
 
-    absolute_uv = bpy.props.BoolProperty(
+    absolute_uv: bpy.props.BoolProperty(
         name        = 'Absolute UV',
         description = 'Exported UV coordinates will be fixed to associated texture image size (Required for JKDF2 & MOTS)',
         default     = True,
     )
 
-    export_vert_colors = bpy.props.BoolProperty(
+    export_vert_colors: bpy.props.BoolProperty(
         name        = 'Export Vertex Colors',
         description = 'Export vertex colors to 3DO file',
         default     = False,
     )
 
-    sync_mesh_list = bpy.props.BoolProperty(
+    sync_mesh_list: bpy.props.BoolProperty(
         name        = 'Sync Mesh List with Node Hierarchy',
         description = 'Reorder the mesh list to match the order of the hierarchy node listt, ensuring that the mesh sequence numbers correspond exactly to the node sequence numbers.\n\nThis alignment preserves the original model''s structure and prevents potential issues where discrepancies could disrupt the model in the game.',
         default     = True,
