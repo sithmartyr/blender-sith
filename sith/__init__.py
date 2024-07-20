@@ -152,7 +152,6 @@ def _get_export_obj(context, report, data_type: str):
             report({'ERROR'}, f"No object selected! Select 1 object or put object into '{kGModel3do}' group!")
             return None
         eobj = context.active_object
-
     else: # Model3do group
         objs = bpy.data.collections[kGModel3do].objects
         if len(objs) == 0:
@@ -360,7 +359,7 @@ class ExportModel3do(bpy.types.Operator, ExportHelper):
 
     sync_mesh_list: bpy.props.BoolProperty(
         name        = 'Sync Mesh List with Node Hierarchy',
-        description = 'Reorder the mesh list to match the order of the hierarchy node listt, ensuring that the mesh sequence numbers correspond exactly to the node sequence numbers.\n\nThis alignment preserves the original model''s structure and prevents potential issues where discrepancies could disrupt the model in the game.',
+        description = 'Reorder the mesh list to match the order of the hierarchy node list, ensuring that the mesh sequence numbers correspond exactly to the node sequence numbers.\n\nThis alignment preserves the original model''s structure and prevents potential issues where discrepancies could disrupt the model in the game.',
         default     = True,
     )
 

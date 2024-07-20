@@ -233,7 +233,7 @@ def _create_objects_from_model(model: Model3do, uvAbsolute: bool, geosetNum: int
             if importRadiusObj:
                 _set_mesh_radius(obj, mesh3do.radius)
 
-            obj.display_type = 'SOLID'
+            obj.display_type = getDrawType(mesh3do.geometryMode)
             obj.sith_model3do_light_mode = mesh3do.lightMode.name
             obj.sith_model3do_texture_mode = mesh3do.textureMode.name
             obj.display_bounds_type = 'SPHERE'
