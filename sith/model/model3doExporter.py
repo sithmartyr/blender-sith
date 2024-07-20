@@ -281,7 +281,7 @@ def _get_model_radius(obj: bpy.types.Object, scale: mathutils.Vector = mathutils
         nonlocal min, max
         for  v in o.data.vertices:
 
-            v_world = vectorMultiply(o.matrix_local * v.co, s)
+            v_world = vectorMultiply((o.matrix_local @ v.co), s)
             if v_world.x < min.x:
                 min.x = v_world.x
             if v_world.x > max.x:
