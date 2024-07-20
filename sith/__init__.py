@@ -342,7 +342,7 @@ class ExportModel3do(bpy.types.Operator, ExportHelper):
             (Model3doFileVersion.Version2_2.name, '2.2 - IJIM (RGB)'  , 'Indiana Jones and the Infernal Machine - RGB color' ),
             (Model3doFileVersion.Version2_3.name, '2.3 - IJIM'        , 'Indiana Jones and the Infernal Machine - RGBA color')
         ],
-        default = Model3doFileVersion.Version2_3.name
+        default = Model3doFileVersion.Version2_1.name
     )
 
     absolute_uv: bpy.props.BoolProperty(
