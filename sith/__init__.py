@@ -22,9 +22,10 @@
 bl_info = {
     "name": "Sith Game Engine Formats (.3do, .mat, .key)",
     "description": "Import/export 3D model(s), animation(s) and texture(s) for the games based on Sith game engine",
-    "author": "Crt Vavros",
+    "author": "Crt Vavros & sithmartyr",
     "version": (1, 0, 0),
     "blender": (4, 1, 1),
+    "pre_release": "rc4",
     "location": "File > Import-Export",
     "wiki_url": "https://github.com/smlu/blender-sith",
     "tracker_url": "https://github.com/smlu/blender-sith/issues",
@@ -441,7 +442,7 @@ class ExportKey(bpy.types.Operator, ExportHelper):
     bl_label     = 'Export KEY'
     filename_ext = '.key'
 
-    filter_glob = bpy.props.StringProperty(
+    filter_glob: bpy.props.StringProperty(
         default = '*.key',
         options = {'HIDDEN'}
     )
@@ -455,14 +456,14 @@ class ExportKey(bpy.types.Operator, ExportHelper):
                 ('20'   , '20 fps', ''),
                 ('15'   , '15 fps', '')]
 
-    flags = bpy.props.EnumProperty(
+    flags: bpy.props.EnumProperty(
         name        = 'Flags',
         description = 'Animation flags. Probably not used in the game and overridden by puppet sub-mode flags',
         items       = _get_key_flags_enum_list(),
         options     = {'ENUM_FLAG'}
     )
 
-    node_types = HexProperty(
+    node_types: HexProperty(
         'node_types',
         name        = 'High Priority Node(s)',
         description = '3DO hierarchy node types which have higher animation priority set by the associated puppet file.\n\nBy default all 3DO joint nodes have low animation priority assigned in the associated puppet file (.pup). When the node type is defined here then this node will have high priority value assigned. Set this field to `FFFF` in order to assign all node types to high priority',
@@ -471,12 +472,12 @@ class ExportKey(bpy.types.Operator, ExportHelper):
         pad         = True
     )
 
-    fps = bpy.props.EnumProperty(
+    fps: bpy.props.EnumProperty(
         name  = 'Frame rate',
         items = _get_fps_enum_list()
     )
 
-    obj   = None
+    obj = None
 
     def draw(self, context):
         layout = self.layout
@@ -508,7 +509,7 @@ class ExportKey(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         context.scene.sith_key_flags = self.flags
         context.scene.sith_key_types = self.node_types
-        context.scene.render.fps     = float(self.fps)
+        context.scene.render.fps     = int(self.fps)
         scene = context.scene.copy()
         try:
             exportKey(self.obj, scene, self.filepath)
@@ -520,7 +521,7 @@ class ExportKey(bpy.types.Operator, ExportHelper):
             return {'CANCELLED'}
         finally:
             if scene:
-                bpy.data.scenes.remove(scene, True)
+                bpy.data.scenes.remove(scene, do_unlink=True)
 
 
 class Model3doPanel(bpy.types.Panel):

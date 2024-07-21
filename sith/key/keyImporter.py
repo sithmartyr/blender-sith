@@ -66,7 +66,7 @@ def importKey(keyPath: str, scene: bpy.types.Scene, clearScene: bool, validateAc
             marker_name = str(m.type.value)
             if namedMarkers:
                 marker_name = m.type.name
-            scene.timeline_markers.new(marker_name, m.frame)
+            scene.timeline_markers.new(name=marker_name, frame=int(m.frame))
 
         for node in key.nodes:
             # Get object to animate
