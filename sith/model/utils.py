@@ -213,8 +213,8 @@ def makeRotationMatrix(pitch: float, yaw: float, roll: float) -> mathutils.Matri
     r = math.radians(roll)
 
     # rotate arount yaw then pitch and then roll
-    return mathutils.Matrix.Rotation(y, 3, 'Z') * \
-           mathutils.Matrix.Rotation(p, 3, 'X') * \
+    return mathutils.Matrix.Rotation(y, 3, 'Z') @ \
+           mathutils.Matrix.Rotation(p, 3, 'X') @ \
            mathutils.Matrix.Rotation(r, 3, 'Y')
 
 

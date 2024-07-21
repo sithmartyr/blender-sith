@@ -36,9 +36,10 @@ def importKey(keyPath: str, scene: bpy.types.Scene, clearScene: bool, validateAc
         print("importing KEY: %r..." % (keyPath), end="")
 
         key = keyLoader.loadKey(keyPath)
+        print(f"Loaded key with {len(key.nodes)} nodes and {key.numFrames} frames.")
 
         # Check selected object or find anim object in the scene
-        obj = scene.objects.active
+        obj = bpy.context.view_layer.objects.active
         if obj:
             obj = _get_parent(obj)
             if validateActiveObject and not _check_obj(obj, key.nodes, key.numJoints):
@@ -51,10 +52,10 @@ def importKey(keyPath: str, scene: bpy.types.Scene, clearScene: bool, validateAc
         if clearScene:
             clearSceneAnimData(scene)
 
-        scene.frame_start     = 0
-        scene.frame_end       = key.numFrames - 1 if clearScene else max(scene.frame_end, key.numFrames - 1)
-        scene.frame_step      = 1
-        scene.render.fps      = key.fps
+        scene.frame_start = 0
+        scene.frame_end = key.numFrames - 1 if clearScene else max(scene.frame_end, key.numFrames - 1)
+        scene.frame_step = 1
+        scene.render.fps = int(key.fps)
         scene.render.fps_base = 1.0
 
         if clearScene:
@@ -75,12 +76,13 @@ def importKey(keyPath: str, scene: bpy.types.Scene, clearScene: bool, validateAc
                 continue
 
             # Add object's keyframes
+            rotation_data_path = _get_rotation_data_path(aobj)
             for keyframe in node.keyframes:
                 _set_obj_location(aobj, keyframe.position)
                 aobj.keyframe_insert(data_path="location", frame=keyframe.frame)
 
                 objSetRotation(aobj, keyframe.orientation)
-                aobj.keyframe_insert(data_path=_get_rotation_data_path(aobj), frame=keyframe.frame)
+                aobj.keyframe_insert(data_path=rotation_data_path, frame=keyframe.frame)
 
             # Fix any broken interpolation between keyframes
             _fix_obj_anim_interpolation(aobj)
@@ -91,7 +93,7 @@ def importKey(keyPath: str, scene: bpy.types.Scene, clearScene: bool, validateAc
 def _set_obj_location(obj: bpy.types.Object, location: Vector3f):
     obj.location = location
 
-    # Substract pivot offset from location
+    # Subtract pivot offset from location
     for c in obj.constraints:
         if type(c) is bpy.types.PivotConstraint:
             pivot = -c.offset

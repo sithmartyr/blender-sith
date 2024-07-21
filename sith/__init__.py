@@ -402,24 +402,24 @@ class ImportKey(bpy.types.Operator, ImportHelper):
     bl_label     = 'Import KEY'
     filename_ext = '.key'
 
-    filter_glob = bpy.props.StringProperty(
+    filter_glob: bpy.props.StringProperty(
         default = '*.key',
         options = {'HIDDEN'}
     )
 
-    validate_active_object = bpy.props.BoolProperty(
+    validate_active_object: bpy.props.BoolProperty(
         name        = 'Validate',
         description = 'Validate that the active object has all the required animating nodes before importing the KEY animation.',
         default     = True,
     )
 
-    clear_scene = bpy.props.BoolProperty(
+    clear_scene: bpy.props.BoolProperty(
         name        = 'Clear scene',
         description = 'Clear any existing animation data from the scene before importing KEY animation.',
         default     = True,
     )
 
-    named_markers = bpy.props.BoolProperty(
+    named_markers: bpy.props.BoolProperty(
         name        = 'Import markers by name',
         description = 'Import frame markers by name rather than by number.',
         default     = False,
