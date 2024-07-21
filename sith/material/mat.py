@@ -363,10 +363,8 @@ def importMat(filePath: Union[Path, str], cmp: Optional[ColorMap] = None) -> bpy
         mat.blend_method = 'BLEND' if use_transparency else 'OPAQUE'
         mat.alpha_threshold = 0.0
         for i in range(0, _max_cels(h.texture_count)):
-            print(f"Reading mipmap {i}")
             mm = _read_mipmap(f, h.color_info, cmp)
             _mat_add_new_texture(mat, mm.width, mm.height, i, mm.pixel_data_array[0] if mm.pixel_data_array else None, hasTransparency=use_transparency)
-            print(f"Mipmap {i} read successfully")
 
     mat.node_tree.nodes['Principled BSDF'].inputs['Base Color'].default_value = (1, 1, 1, 1)
     return mat
