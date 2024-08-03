@@ -22,7 +22,7 @@ Addon provides Blender game assets import/export scripts for the games based on 
 The latest Blender 4.1.1, you can download it [here](https://www.blender.org/download/). 
 
 ## Installation
-   1. Download `sith.zip` file from the [Releases](https://github.com/smlu/blender-sith/releases) page.
+   1. Download `sith.zip` file from the [Releases](https://github.com/sithmartyr/blender-sith/releases) page.
    2. Open Blender and select `Edit > Preferences > Add-ons > Install...`  
       and select the downloaded `sith.zip` file.
    3. Enable the addon by clicking the checkbox next to the add-on name.
