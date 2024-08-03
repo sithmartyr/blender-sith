@@ -564,16 +564,16 @@ class Mesh3doFaceLayer(bpy.types.PropertyGroup):
     Intermediate class for temporary storing BMFace properties by Mesh3doFacePanel
     and used it to display stored properties to the UI.
     """
-    face_id = bpy.props.IntProperty(default = -1)
+    face_id: bpy.props.IntProperty(default = -1)
 
-    type = bpy.props.EnumProperty(
+    type: bpy.props.EnumProperty(
         name        = 'Type',
         description = 'Face type flag',
         items       = _get_mesh3do_face_type_list(),
         options     = {'ENUM_FLAG'}
     )
 
-    geo_mode = bpy.props.EnumProperty(
+    geo_mode: bpy.props.EnumProperty(
         name        = 'Geometry Mode',
         description = 'Geometry mode',
         items       = _get_model3do_geometry_mode_list(),
@@ -581,7 +581,7 @@ class Mesh3doFaceLayer(bpy.types.PropertyGroup):
         options     = {'HIDDEN', 'LIBRARY_EDITABLE'}
     )
 
-    light_mode = bpy.props.EnumProperty(
+    light_mode: bpy.props.EnumProperty(
         name        = 'Lighting Mode',
         description = 'Lighting mode',
         items       = _get_model3do_light_mode_list(),
@@ -589,7 +589,7 @@ class Mesh3doFaceLayer(bpy.types.PropertyGroup):
         options     = {'HIDDEN', 'LIBRARY_EDITABLE'}
     )
 
-    texture_mode = bpy.props.EnumProperty(
+    texture_mode: bpy.props.EnumProperty(
         name        = 'Texture Mode',
         description = 'Texture mapping mode (Not used by IJIM)',
         items       = _get_model3do_texture_mode_list(),
@@ -597,7 +597,7 @@ class Mesh3doFaceLayer(bpy.types.PropertyGroup):
         options     = {'HIDDEN', 'LIBRARY_EDITABLE'}
     )
 
-    extra_light = bpy.props.FloatVectorProperty(
+    extra_light: bpy.props.FloatVectorProperty(
         name        = 'Extra Light',
         description = 'Face extra light color',
         size        = 4,
